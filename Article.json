@@ -1,0 +1,60 @@
+{
+  "name": "Article",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article title"
+    },
+    "subtitle": {
+      "type": "string",
+      "description": "Short subtitle or excerpt"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full article content in markdown"
+    },
+    "cover_image": {
+      "type": "string",
+      "description": "Cover image URL"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Technology",
+        "Lifestyle",
+        "Business",
+        "Design",
+        "Personal",
+        "Travel",
+        "Other"
+      ],
+      "default": "Personal"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Article tags"
+    },
+    "published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the article is published"
+    },
+    "published_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the article was published"
+    },
+    "reading_time": {
+      "type": "number",
+      "description": "Estimated reading time in minutes"
+    }
+  },
+  "required": [
+    "title",
+    "content"
+  ]
+}
