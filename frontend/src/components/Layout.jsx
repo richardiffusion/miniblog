@@ -1,26 +1,13 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Edit3, Calendar, Mail, LayoutDashboard, PenTool } from "lucide-react";
-import { User } from "@/entities/User";
+import { Home, Calendar, Mail, PenTool } from "lucide-react";
 
-export default function Layout({ children, currentPageName }) {
+export default function Layout({ children }) {
   const location = useLocation();
-  const [user, setUser] = React.useState(null);
   const [scrolled, setScrolled] = React.useState(false);
 
   React.useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const currentUser = await User.me();
-        setUser(currentUser);
-      } catch (error) {
-        setUser(null);
-      }
-    };
-    loadUser();
-
     const handleScroll = () => {
       setScrolled(window.scrollY > 50);
     };
@@ -34,11 +21,6 @@ export default function Layout({ children, currentPageName }) {
     { name: "Home", path: createPageUrl("Home"), icon: Home },
     { name: "Calendar", path: createPageUrl("Calendar"), icon: Calendar },
     { name: "Contact", path: createPageUrl("Contact"), icon: Mail },
-  ];
-
-  const adminPages = [
-    { name: "Dashboard", path: createPageUrl("Dashboard"), icon: LayoutDashboard },
-    { name: "New Article", path: createPageUrl("NewArticle"), icon: Edit3 },
   ];
 
   return (
@@ -75,7 +57,7 @@ export default function Layout({ children, currentPageName }) {
               </span>
             </Link>
 
-            {/* Navigation Links */}
+            {/* Navigation Links - 只显示公开页面 */}
             <div className="flex items-center gap-1">
               {publicPages.map((page) => (
                 <Link
@@ -91,26 +73,6 @@ export default function Layout({ children, currentPageName }) {
                   <span className="hidden sm:inline">{page.name}</span>
                 </Link>
               ))}
-              
-              {user && (
-                <>
-                  <div className="w-px h-6 bg-gray-300 mx-2" />
-                  {adminPages.map((page) => (
-                    <Link
-                      key={page.name}
-                      to={page.path}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                        isActive(page.path)
-                          ? "bg-cyan-100 text-cyan-700 font-medium"
-                          : "text-gray-700 hover:bg-cyan-50"
-                      }`}
-                    >
-                      <page.icon className="w-4 h-4" />
-                      <span className="hidden sm:inline">{page.name}</span>
-                    </Link>
-                  ))}
-                </>
-              )}
             </div>
           </div>
         </div>

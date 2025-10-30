@@ -1,7 +1,4 @@
-
 import React, { useState } from "react";
-import { SendEmail } from "@/integrations/Core";
-import { User } from "@/entities/User";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,34 +22,35 @@ export default function Contact() {
     setSending(true);
 
     try {
-      const blogOwner = await User.list();
-      const ownerEmail = blogOwner[0]?.email || "your-email@example.com";
-
-      await SendEmail({
-        from_name: formData.name,
-        to: ownerEmail,
-        subject: `[Blog Contact] ${formData.subject}`,
-        body: `
-          New message from your blog contact form:
-          
-          From: ${formData.name}
-          Email: ${formData.email}
-          Subject: ${formData.subject}
-          
-          Message:
-          ${formData.message}
-        `,
+      const response = await fetch('http://localhost:5000/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       });
+
+      if (!response.ok) {
+        throw new Error('Failed to send message');
+      }
 
       setSent(true);
       setFormData({ name: "", email: "", subject: "", message: "" });
 
       setTimeout(() => setSent(false), 5000);
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("Error sending message:", error);
+      alert('There was an error sending your message. Please try again.');
     }
 
     setSending(false);
+  };
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   return (
@@ -80,9 +78,10 @@ export default function Contact() {
                     <Label htmlFor="name">Your Name *</Label>
                     <Input
                       id="name"
+                      name="name"
                       placeholder="John Doe"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={handleChange}
                       required
                     />
                   </div>
@@ -90,10 +89,11 @@ export default function Contact() {
                     <Label htmlFor="email">Your Email *</Label>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       placeholder="john@example.com"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={handleChange}
                       required
                     />
                   </div>
@@ -103,9 +103,10 @@ export default function Contact() {
                   <Label htmlFor="subject">Subject *</Label>
                   <Input
                     id="subject"
+                    name="subject"
                     placeholder="What's this about?"
                     value={formData.subject}
-                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    onChange={handleChange}
                     required
                   />
                 </div>
@@ -114,9 +115,10 @@ export default function Contact() {
                   <Label htmlFor="message">Message *</Label>
                   <Textarea
                     id="message"
+                    name="message"
                     placeholder="Tell me more..."
                     value={formData.message}
-                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    onChange={handleChange}
                     rows={6}
                     required
                   />

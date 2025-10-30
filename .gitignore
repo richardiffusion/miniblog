@@ -49,3 +49,6 @@ Thumbs.db
 # 包文件
 *.tgz
 *.tar.gz
+
+# change log
+CHANGE_LOG.md

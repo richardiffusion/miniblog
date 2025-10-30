@@ -1,10 +1,6 @@
-
 import React, { useState, useEffect } from "react";
 import { Article } from "@/entities/Article";
-import { User } from "@/entities/User";
-import { UploadFile } from "@/integrations/Core";
-import { useNavigate } from "react-router-dom";
-import { createPageUrl } from "@/utils";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,16 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Eye, Upload, Loader2 } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function NewArticle() {
   const navigate = useNavigate();
+  const { id } = useParams(); // 从路由参数获取 ID
   const [loading, setLoading] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [articleData, setArticleData] = useState({
@@ -37,49 +27,46 @@ export default function NewArticle() {
   });
   const [tagInput, setTagInput] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
-  const [articleId, setArticleId] = useState(null);
 
   useEffect(() => {
-    checkAuthAndLoad();
-  }, []);
+    console.log('NewArticle mounted with ID:', id); // 调试
+    
+    if (id) {
+      setIsEditMode(true);
+      loadArticle(id);
+    }
+  }, [id]); // 依赖 id
 
   useEffect(() => {
     calculateReadingTime();
   }, [articleData.content]);
 
-  const checkAuthAndLoad = async () => {
+  const loadArticle = async (articleId) => {
     try {
-      await User.me();
+      console.log('Loading article for editing:', articleId);
+      const article = await Article.getById(articleId); // 使用 getById 方法
+      console.log('Article loaded for editing:', article);
       
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get("id");
-      
-      if (id) {
-        setIsEditMode(true);
-        setArticleId(id);
-        const articles = await Article.filter({ id });
-        console.log('Loaded article for editing:', articles[0]); // 调试日志
-        
-        if (articles.length > 0) {
-          const article = articles[0];
-          // 确保加载所有字段
-          setArticleData({
-            title: article.title || "",
-            subtitle: article.subtitle || "",
-            content: article.content || "",
-            cover_image: article.cover_image || "",
-            category: article.category || "Personal",
-            tags: article.tags || [],
-            published: article.published || false,
-            reading_time: article.reading_time || 0,
-          });
-        } else {
-          console.error('No article found with ID:', id);
-        }
+      if (article) {
+        setArticleData({
+          title: article.title || "",
+          subtitle: article.subtitle || "",
+          content: article.content || "",
+          cover_image: article.cover_image || "",
+          category: article.category || "Personal",
+          tags: article.tags || [],
+          published: article.published || false,
+          reading_time: article.reading_time || 0,
+        });
+      } else {
+        console.error('Article not found for editing:', articleId);
+        alert('Article not found');
+        navigate("/admin/dashboard");
       }
     } catch (error) {
-      console.error('Authentication failed:', error);
-      navigate(createPageUrl("Home"));
+      console.error('Error loading article for editing:', error);
+      alert('Error loading article');
+      navigate("/admin/dashboard");
     }
   };
 
@@ -88,16 +75,6 @@ export default function NewArticle() {
     const words = articleData.content.split(/\s+/).length;
     const time = Math.ceil(words / wordsPerMinute);
     setArticleData((prev) => ({ ...prev, reading_time: time }));
-  };
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    const { file_url } = await UploadFile({ file });
-    setArticleData((prev) => ({ ...prev, cover_image: file_url }));
-    setUploadingImage(false);
   };
 
   const handleAddTag = () => {
@@ -118,27 +95,51 @@ export default function NewArticle() {
   };
 
   const handleSave = async (publish = false) => {
-    setLoading(true);
-    const dataToSave = {
-      ...articleData,
-      published: publish,
-      published_date: publish && !isEditMode ? new Date().toISOString() : articleData.published_date,
-    };
-
-    if (isEditMode) {
-      await Article.update(articleId, dataToSave);
-    } else {
-      await Article.create(dataToSave);
+    if (!articleData.title.trim()) {
+      alert('Please enter a title');
+      return;
     }
 
-    navigate(createPageUrl("Dashboard"));
+    if (!articleData.content.trim()) {
+      alert('Please enter content');
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const dataToSave = {
+        ...articleData,
+        published: publish,
+        published_date: publish ? new Date().toISOString() : articleData.published_date,
+      };
+
+      let savedArticle;
+      if (isEditMode && id) {
+        console.log('Updating article:', id, dataToSave);
+        savedArticle = await Article.update(id, dataToSave);
+      } else {
+        console.log('Creating new article:', dataToSave);
+        savedArticle = await Article.create(dataToSave);
+      }
+
+      console.log('Article saved:', savedArticle);
+      
+      // 导航到 Dashboard
+      navigate("/admin/dashboard");
+    } catch (error) {
+      console.error('Error saving article:', error);
+      alert('Error saving article. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">
       <div className="flex items-center justify-between mb-8">
         <button
-          onClick={() => navigate(createPageUrl("Dashboard"))}
+          onClick={() => navigate("/admin/dashboard")}
           className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -218,18 +219,14 @@ export default function NewArticle() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cover-image">Cover Image</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="cover-image"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  disabled={uploadingImage}
-                  className="flex-1"
-                />
-                {uploadingImage && <Loader2 className="w-5 h-5 animate-spin" />}
-              </div>
+              <Label htmlFor="cover-image">Cover Image URL</Label>
+              <Input
+                id="cover-image"
+                placeholder="Enter image URL..."
+                value={articleData.cover_image}
+                onChange={(e) => setArticleData({ ...articleData, cover_image: e.target.value })}
+                className="flex-1"
+              />
               {articleData.cover_image && (
                 <img
                   src={articleData.cover_image}

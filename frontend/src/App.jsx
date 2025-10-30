@@ -13,12 +13,14 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/article" element={<ArticleView />} />
         <Route path="/article/:id" element={<ArticleView />} />
-        <Route path="/new-article" element={<NewArticle />} />
         <Route path="/calendar" element={<Calendar />} />
         <Route path="/contact" element={<Contact />} />
+        
+        {/* 秘密管理路由 - 只有你知道这些URL */}
+        <Route path="/admin/dashboard" element={<Dashboard />} />
+        <Route path="/admin/new-article" element={<NewArticle />} />
+        <Route path="/admin/edit-article/:id" element={<NewArticle />} />
       </Routes>
     </Layout>
   )
