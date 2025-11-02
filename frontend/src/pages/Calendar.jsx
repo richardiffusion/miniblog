@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Article } from "@/entities/Article";
 import { Link } from "react-router-dom";
@@ -11,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 export default function Calendar() {
   const [articles, setArticles] = useState([]);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date()); // 始终显示今天所在的月份
   const [selectedDate, setSelectedDate] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -22,7 +21,57 @@ export default function Calendar() {
   const loadArticles = async () => {
     const data = await Article.filter({ published: true });
     setArticles(data);
+    
+    // 设置默认选中的日期（但不改变当前显示的月份）
+    setDefaultSelectedDate(data);
     setLoading(false);
+  };
+
+  // 设置默认选中的日期（但不改变当前月份显示）
+  const setDefaultSelectedDate = (articlesData) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // 检查今天是否有文章
+    const todayArticles = articlesData.filter((article) => {
+      const articleDate = new Date(article.published_date || article.created_date);
+      articleDate.setHours(0, 0, 0, 0);
+      return isSameDay(articleDate, today);
+    });
+
+    if (todayArticles.length > 0) {
+      // 如果今天有文章，选择今天
+      setSelectedDate(today);
+      return;
+    }
+
+    // 如果今天没有文章，找到最近一天有文章的日期
+    const articlesWithDates = articlesData.map((article) => {
+      const articleDate = new Date(article.published_date || article.created_date);
+      articleDate.setHours(0, 0, 0, 0);
+      return {
+        ...article,
+        date: articleDate
+      };
+    });
+
+    // 按日期降序排序（最新的在前面）
+    articlesWithDates.sort((a, b) => b.date - a.date);
+
+    // 找到第一个在今天或今天之前的文章日期
+    const recentArticle = articlesWithDates.find(article => article.date <= today);
+
+    if (recentArticle) {
+      // 选择最近的有文章的日期
+      setSelectedDate(recentArticle.date);
+      // 注意：这里不再设置 currentDate，保持当前月份为今天
+    } else if (articlesWithDates.length > 0) {
+      // 如果所有文章都在未来，选择最新的文章日期
+      const latestArticle = articlesWithDates[0];
+      setSelectedDate(latestArticle.date);
+      // 同样，不设置 currentDate
+    }
+    // 如果没有文章，selectedDate 保持为 null
   };
 
   const monthStart = startOfMonth(currentDate);
@@ -48,6 +97,9 @@ export default function Calendar() {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
+  // 添加一个函数来检查选中的日期是否在当前显示的月份中
+  const isSelectedDateInCurrentMonth = selectedDate && isSameMonth(selectedDate, currentDate);
+
   return (
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="mb-8">
@@ -69,7 +121,11 @@ export default function Calendar() {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setCurrentDate(new Date())}
+                    onClick={() => {
+                      const today = new Date();
+                      setCurrentDate(today);
+                      setSelectedDate(today);
+                    }}
                   >
                     Today
                   </Button>
@@ -86,6 +142,20 @@ export default function Calendar() {
                 </div>
               ) : (
                 <div>
+                  {/* 如果选中的日期不在当前月份，显示提示 */}
+                  {selectedDate && !isSelectedDateInCurrentMonth && (
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700">
+                      Currently viewing articles from {format(selectedDate, "MMMM d, yyyy")}. 
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-blue-700 ml-1"
+                        onClick={() => setCurrentDate(selectedDate)}
+                      >
+                        Switch to {format(selectedDate, "MMMM")}
+                      </Button>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-7 gap-2 mb-2">
                     {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
                       <div key={day} className="text-center text-sm font-semibold text-gray-600 py-2">
@@ -157,7 +227,7 @@ export default function Calendar() {
                   {selectedArticles.map((article) => (
                     <Link
                       key={article.id}
-                      to={createPageUrl(`ArticleView?id=${article.id}`)}
+                      to={`/article/${article.id}`}
                       className="block p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all"
                     >
                       <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">

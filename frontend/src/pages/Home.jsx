@@ -68,10 +68,10 @@ export default function Home() {
             className="text-center"
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              Welcome to My Blog
+              Richard's AI Blog
             </h1>
             <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-8">
-              Sharing thoughts, stories, and ideas that matter
+              Sharing thoughts, stories, and ideas that AI matters
             </p>
             <div className="flex justify-center gap-4">
               <Link

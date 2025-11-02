@@ -173,7 +173,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Email</p>
-                  <p className="text-gray-600 text-sm">your-email@example.com</p>
+                  <p className="text-gray-600 text-sm">richard.yiqun.li@outlook.com</p>
                 </div>
               </div>
 
@@ -183,7 +183,7 @@ export default function Contact() {
                 </div>
                 <div>
                   <p className="font-medium text-gray-900">Location</p>
-                  <p className="text-gray-600 text-sm">Your City, Country</p>
+                  <p className="text-gray-600 text-sm">Singapore | Hong Kong | Shenzhen</p>
                 </div>
               </div>
 

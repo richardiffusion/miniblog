@@ -53,7 +53,7 @@ export default function Layout({ children }) {
                 <PenTool className="w-5 h-5 text-white" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                My Blog
+                Richardiffusion Blog
               </span>
             </Link>
 
@@ -90,7 +90,7 @@ export default function Layout({ children }) {
             <div className="flex items-center gap-2">
               <PenTool className="w-5 h-5 text-blue-500" />
               <span className="text-gray-600">
-                © 2024 My Blog. Share your thoughts with the world.
+                © 2025 Richardiffusion Blog. All rights reserved.
               </span>
             </div>
             <div className="flex gap-4">
