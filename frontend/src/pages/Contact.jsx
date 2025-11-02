@@ -16,13 +16,27 @@ export default function Contact() {
   });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [error, setError] = useState("");
+
+  // 动态获取 API 基础 URL
+  const getApiBaseUrl = () => {
+    // 生产环境：使用相对路径
+    if (process.env.NODE_ENV === 'production') {
+      return '/blog/api';
+    }
+    // 开发环境：使用 localhost
+    return 'http://localhost:5001/blog/api';
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSending(true);
+    setError("");
 
     try {
-      const response = await fetch('http://localhost:5000/api/contact', {
+      const apiUrl = `${getApiBaseUrl()}/contact`;
+      
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -31,7 +45,8 @@ export default function Contact() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to send message');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       setSent(true);
@@ -40,7 +55,7 @@ export default function Contact() {
       setTimeout(() => setSent(false), 5000);
     } catch (error) {
       console.error("Error sending message:", error);
-      alert('There was an error sending your message. Please try again.');
+      setError(error.message || 'There was an error sending your message. Please try again.');
     }
 
     setSending(false);
@@ -51,6 +66,8 @@ export default function Contact() {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // 清除错误信息当用户开始输入时
+    if (error) setError("");
   };
 
   return (
@@ -123,6 +140,17 @@ export default function Contact() {
                     required
                   />
                 </div>
+
+                {/* 错误信息显示 */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-center"
+                  >
+                    {error}
+                  </motion.div>
+                )}
 
                 <Button
                   type="submit"

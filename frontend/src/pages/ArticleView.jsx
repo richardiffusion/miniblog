@@ -6,6 +6,7 @@ import { Calendar, Clock, Tag, ArrowLeft } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import DOMPurify from "dompurify";
 
 export default function ArticleView() {
   const navigate = useNavigate();
@@ -133,9 +134,12 @@ export default function ArticleView() {
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <article className="prose prose-lg prose-blue max-w-none">
-          <ReactMarkdown>{article.content}</ReactMarkdown>
-        </article>
+        <article
+          className="prose prose-lg prose-blue max-w-none"
+          dangerouslySetInnerHTML={{
+            __html: DOMPurify ? DOMPurify.sanitize(article.content) : article.content
+          }}
+        />
       </div>
     </div>
   );
