@@ -3,6 +3,8 @@
 
 This project is a blog post project built on React + Vite + Tailwind CSS, and Nodejs Express + MongoDB.
 
+Deployed versions are available for viewing on www.richardiffusion.me/blog
+
 ## Functions and Features
 - Blog Edit, Post and Revise
 - Dashboard
