@@ -9,13 +9,14 @@ import path from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+// 加载环境变量
+dotenv.config();
 
 // 路由导入
+import adminRoutes from './routes/admin.js';
 import articleRoutes from './routes/articles.js';
 import contactRoutes from './routes/contact.js';
 
-// 加载环境变量
-dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -44,6 +45,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/blog')
 // 路由
 app.use('/api/articles', articleRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/blog/api/admin', adminRoutes);
 
 // 健康检查
 app.get('/api/health', (req, res) => {

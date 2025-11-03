@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Article } from "@/entities/Article";
 import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Plus, Edit, Trash2, Eye, EyeOff, Calendar, BarChart3 } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, Calendar, BarChart3, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,11 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useAuth } from "@/hooks/useAuth"; //admin auth hook
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user } = useAuth(); // get current user info
 
   useEffect(() => {
     loadArticles();
@@ -120,8 +122,17 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-6 py-12">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Article Dashboard</h1>
-          <p className="text-gray-600 mt-1">Manage your blog content</p>
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900">Article Dashboard</h1>
+            {/* 添加管理员徽章 */}
+            {user && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                <User className="w-3 h-3 mr-1" />
+                {user.username}
+              </Badge>
+            )}
+          </div>
+          <p className="text-gray-600">Manage your blog content</p>
         </div>
         <Link to="/admin/new-article">
           <Button className="bg-blue-600 hover:bg-blue-700">

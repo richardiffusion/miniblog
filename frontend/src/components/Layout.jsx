@@ -1,11 +1,29 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Calendar, Mail, PenTool } from "lucide-react";
+import { Home, Calendar, Mail, PenTool, Settings, LogOut, User, Plus, BarChart3 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth"; // 添加这行
+import { Button } from "@/components/ui/button"; // 添加这行
 
 export default function Layout({ children }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const [scrolled, setScrolled] = React.useState(false);
+  const { isAuthenticated, user, logout, checkAuth } = useAuth(); // 添加这行
+
+
+    // 添加这个 useEffect 来检查认证状态
+  React.useEffect(() => {
+    checkAuth();
+  }, [location.pathname, checkAuth]); // 当路由变化时检查认证状态
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 50);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -22,6 +40,16 @@ export default function Layout({ children }) {
     { name: "Calendar", path: createPageUrl("Calendar"), icon: Calendar },
     { name: "Contact", path: createPageUrl("Contact"), icon: Mail },
   ];
+
+  const adminPages = [
+    { name: "Dashboard", path: "/admin/dashboard", icon: BarChart3 },
+    { name: "New Article", path: "/admin/new-article", icon: Plus },
+  ];
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
@@ -57,8 +85,9 @@ export default function Layout({ children }) {
               </span>
             </Link>
 
-            {/* Navigation Links - 只显示公开页面 */}
+            {/* Navigation Links */}
             <div className="flex items-center gap-1">
+              {/* 公开页面 */}
               {publicPages.map((page) => (
                 <Link
                   key={page.name}
@@ -73,6 +102,52 @@ export default function Layout({ children }) {
                   <span className="hidden sm:inline">{page.name}</span>
                 </Link>
               ))}
+
+              {/* 管理员菜单 - 仅在登录时显示 */}
+              {isAuthenticated && adminPages.map((page) => (
+                <Link
+                  key={page.name}
+                  to={page.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    isActive(page.path)
+                      ? "bg-purple-100 text-purple-700 font-medium"
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
+                  <page.icon className="w-4 h-4" />
+                  <span className="hidden sm:inline">{page.name}</span>
+                </Link>
+              ))}
+
+              {/* 登录/退出按钮 */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200">
+                  <div className="flex items-center gap-1 text-sm text-gray-600">
+                    <User className="w-3 h-3" />
+                    <span className="hidden sm:inline">{user?.username}</span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="flex items-center gap-1 text-gray-700 hover:text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden sm:inline">Logout</span>
+                  </Button>
+                </div>
+              ) : (
+                // 只有在非管理页面显示登录链接
+                !location.pathname.startsWith('/admin') && (
+                  <Link
+                    to="/admin-login"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:bg-blue-50"
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span className="hidden sm:inline">Admin</span>
+                  </Link>
+                )
+              )}
             </div>
           </div>
         </div>
@@ -92,6 +167,11 @@ export default function Layout({ children }) {
               <span className="text-gray-600">
                 © 2025 Richardiffusion Blog. All rights reserved.
               </span>
+              {isAuthenticated && (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">
+                  Admin Mode
+                </span>
+              )}
             </div>
             <div className="flex gap-4">
               {publicPages.map((page) => (

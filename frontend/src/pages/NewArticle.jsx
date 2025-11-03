@@ -6,9 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Save, Eye, Upload, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Eye, Upload, Loader2, User } from "lucide-react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
+import { useAuth } from "@/hooks/useAuth"; // admin auth hook
+import { Badge } from "@/components/ui/badge"; // admin badge
+
 
 export default function NewArticle() {
   const navigate = useNavigate();
@@ -27,6 +30,7 @@ export default function NewArticle() {
   });
   const [tagInput, setTagInput] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
+  const { user } = useAuth(); // get current user info
 
   useEffect(() => {
     console.log('NewArticle mounted with ID:', id); // 调试
@@ -145,37 +149,48 @@ export default function NewArticle() {
           <ArrowLeft className="w-4 h-4" />
           Back to Dashboard
         </button>
-        <div className="flex gap-3">
-          <Button
-            variant="outline"
-            onClick={() => handleSave(false)}
-            disabled={loading || !articleData.title}
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="w-4 h-4 mr-2" />
-            )}
-            Save Draft
-          </Button>
-          <Button
-            onClick={() => handleSave(true)}
-            disabled={loading || !articleData.title}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {loading ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Eye className="w-4 h-4 mr-2" />
-            )}
-            Publish
-          </Button>
+        <div className="flex items-center gap-3">
+          {/* 添加管理员徽章 */}
+          {user && (
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+              <User className="w-3 h-3 mr-1" />
+              {user.username}
+            </Badge>
+          )}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => handleSave(false)}
+              disabled={loading || !articleData.title}
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 mr-2" />
+              )}
+              Save Draft
+            </Button>
+            <Button
+              onClick={() => handleSave(true)}
+              disabled={loading || !articleData.title}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {loading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Eye className="w-4 h-4 mr-2" />
+              )}
+              Publish
+            </Button>
+          </div>
         </div>
       </div>
 
       <Card className="border-none shadow-lg">
         <CardHeader>
-          <CardTitle>{isEditMode ? "Edit Article" : "Create New Article"}</CardTitle>
+          <CardTitle className="flex items-center gap-3">
+            {isEditMode ? "Edit Article" : "Create New Article"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
