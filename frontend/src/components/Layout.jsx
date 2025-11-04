@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Home, Calendar, Mail, PenTool, Settings, LogOut, User, Plus, BarChart3 } from "lucide-react";
+import { Home, Calendar, Mail, PenTool, Settings, LogOut, User, Plus, BarChart3, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth"; // 添加这行
 import { Button } from "@/components/ui/button"; // 添加这行
 
@@ -16,14 +16,6 @@ export default function Layout({ children }) {
   React.useEffect(() => {
     checkAuth();
   }, [location.pathname, checkAuth]); // 当路由变化时检查认证状态
-
-  React.useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -50,6 +42,12 @@ export default function Layout({ children }) {
     logout();
     navigate("/");
   };
+
+  // 返回主站点的函数
+  const handleBackToMainSite = () => {
+    window.location.href = "https://www.richardiffusion.me";
+  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-cyan-50 to-sky-50">
@@ -87,6 +85,17 @@ export default function Layout({ children }) {
 
             {/* Navigation Links */}
             <div className="flex items-center gap-1">
+              {/* 返回主站点按钮 - 始终显示 */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToMainSite}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 text-gray-700 hover:bg-green-50 hover:text-green-700"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back to Main Site</span>
+              </Button>
+
               {/* 公开页面 */}
               {publicPages.map((page) => (
                 <Link
@@ -174,6 +183,14 @@ export default function Layout({ children }) {
               )}
             </div>
             <div className="flex gap-4">
+              {/* 在页脚也添加返回主站点的链接 */}
+              <button
+                onClick={handleBackToMainSite}
+                className="text-gray-600 hover:text-green-600 transition-colors flex items-center gap-1"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Main Site
+              </button>
               {publicPages.map((page) => (
                 <Link
                   key={page.name}
