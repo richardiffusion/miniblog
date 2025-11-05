@@ -65,6 +65,26 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/dist/index.html'));
 });
 
+// 在您的 Express 路由中添加
+app.get('/blog/api/articles/published', async (req, res) => {
+  try {
+    const articles = await Article.getPublished();
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get('/blog/api/articles/category/:category', async (req, res) => {
+  try {
+    const { category } = req.params;
+    const articles = await Article.getByCategory(category);
+    res.json(articles);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // 错误处理中间件
 app.use((err, req, res, next) => {

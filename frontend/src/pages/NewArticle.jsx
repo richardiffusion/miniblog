@@ -4,14 +4,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Save, Eye, Upload, Loader2, User } from "lucide-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
 import { useAuth } from "@/hooks/useAuth"; // admin auth hook
 import { Badge } from "@/components/ui/badge"; // admin badge
-
+import MDEditor from '@uiw/react-md-editor';
+import { Textarea } from "@/components/ui/textarea";
 
 export default function NewArticle() {
   const navigate = useNavigate();
@@ -21,12 +19,16 @@ export default function NewArticle() {
   const [articleData, setArticleData] = useState({
     title: "",
     subtitle: "",
+    excerpt: "", // 添加前言字段
     content: "",
     cover_image: "",
     category: "Personal",
+    author: "Richard Li",
     tags: [],
     published: false,
     reading_time: 0,
+    published_date: null, // 添加发布时间字段
+    created_date: null, // 添加创建时间字段
   });
   const [tagInput, setTagInput] = useState("");
   const [isEditMode, setIsEditMode] = useState(false);
@@ -55,12 +57,16 @@ export default function NewArticle() {
         setArticleData({
           title: article.title || "",
           subtitle: article.subtitle || "",
+          excerpt: article.excerpt || "", // 设置前言
           content: article.content || "",
           cover_image: article.cover_image || "",
           category: article.category || "Personal",
+          author: article.author || "Richard Li", // 设置作者，如果没有则用默认值
           tags: article.tags || [],
           published: article.published || false,
           reading_time: article.reading_time || 0,
+          published_date: article.published_date || null, // 保留原发布时间
+          created_date: article.created_date || null, // 保留原创建时间
         });
       } else {
         console.error('Article not found for editing:', articleId);
@@ -112,11 +118,32 @@ export default function NewArticle() {
     setLoading(true);
     
     try {
+      const now = new Date().toISOString();
+      
+      // 构建保存数据
       const dataToSave = {
         ...articleData,
         published: publish,
-        published_date: publish ? new Date().toISOString() : articleData.published_date,
       };
+
+      // 发布时间逻辑：
+      // - 新建文章且发布：使用当前时间
+      // - 编辑文章且发布：如果之前已发布，保留原发布时间；如果是草稿转发布，使用当前时间
+      if (publish) {
+        if (isEditMode && articleData.published_date) {
+          // 编辑已发布文章：保持原发布时间
+          dataToSave.published_date = articleData.published_date;
+        } else {
+          // 新建发布 或 草稿转发布：使用当前时间
+          dataToSave.published_date = now;
+        }
+      } else {
+        // 保存草稿：如果有发布时间则保留，没有则不设置
+        dataToSave.published_date = articleData.published_date || null;
+      }
+
+      // 更新最后修改时间
+      dataToSave.updated_date = now;
 
       let savedArticle;
       if (isEditMode && id) {
@@ -124,6 +151,8 @@ export default function NewArticle() {
         savedArticle = await Article.update(id, dataToSave);
       } else {
         console.log('Creating new article:', dataToSave);
+        // 新文章设置创建时间
+        dataToSave.created_date = now;
         savedArticle = await Article.create(dataToSave);
       }
 
@@ -214,6 +243,23 @@ export default function NewArticle() {
             />
           </div>
 
+
+          {/* // 在 NewArticle.jsx 的表单中添加前言输入 */}
+          <div className="space-y-2">
+            <Label htmlFor="excerpt">Excerpt/前言</Label>
+            <Textarea
+              id="excerpt"
+              placeholder="Enter a brief excerpt to attract readers..."
+              value={articleData.excerpt}
+              onChange={(e) => setArticleData({ ...articleData, excerpt: e.target.value })}
+              rows={3}
+              className="resize-none"
+            />
+            <p className="text-sm text-gray-500">
+              A short, engaging summary that will appear below the title and above the content.
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
@@ -231,6 +277,17 @@ export default function NewArticle() {
                 <option value="Travel">Travel</option>
                 <option value="Other">Other</option>
               </select>
+            </div>
+
+            {/* 新增作者字段 */}
+            <div className="space-y-2">
+              <Label htmlFor="author">Author</Label>
+              <Input
+                id="author"
+                placeholder="Enter author name..."
+                value={articleData.author}
+                onChange={(e) => setArticleData({ ...articleData, author: e.target.value })}
+              />
             </div>
 
             <div className="space-y-2">
@@ -284,24 +341,14 @@ export default function NewArticle() {
             </div>
           </div>
 
+          {/* // 替换 NewArticle.jsx 中的 ReactQuill */}
           <div className="space-y-2">
             <Label htmlFor="content">Content *</Label>
-            <div className="min-h-96">
-              <ReactQuill
-                theme="snow"
+            <div data-color-mode="light">
+              <MDEditor
                 value={articleData.content}
                 onChange={(value) => setArticleData({ ...articleData, content: value })}
-                className="h-80"
-                modules={{
-                  toolbar: [
-                    [{ header: [1, 2, 3, false] }],
-                    ["bold", "italic", "underline", "strike"],
-                    [{ list: "ordered" }, { list: "bullet" }],
-                    ["blockquote", "code-block"],
-                    ["link", "image"],
-                    ["clean"],
-                  ],
-                }}
+                height={400}
               />
             </div>
           </div>

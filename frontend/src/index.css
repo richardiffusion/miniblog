@@ -69,6 +69,6 @@
   }
 
   .prose pre {
-    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-4;
+    @apply bg-gray-50 text-gray-800 p-4 rounded-lg overflow-x-auto my-4 border border-gray-200;
   }
 }

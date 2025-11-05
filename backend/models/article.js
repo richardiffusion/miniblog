@@ -12,6 +12,11 @@ const articleSchema = new mongoose.Schema({
     trim: true,
     maxlength: [300, 'Subtitle cannot exceed 300 characters']
   },
+  excerpt: {
+    type: String,
+    trim: true,
+    maxlength: [500, 'Excerpt cannot exceed 500 characters']
+  },
   content: {
     type: String,
     required: [true, 'Article content is required']
@@ -24,6 +29,11 @@ const articleSchema = new mongoose.Schema({
     type: String,
     enum: ['Technology', 'Lifestyle', 'Business', 'Design', 'Personal', 'Travel', 'Other'],
     default: 'Personal'
+  },
+  author: {
+    type: String,
+    default: 'Richard Li', // 添加作者字段，默认值为 Richard
+    trim: true
   },
   tags: [{
     type: String,
@@ -53,11 +63,16 @@ const articleSchema = new mongoose.Schema({
   }
 });
 
-// 发布时自动设置发布时间
+// 发布时自动设置发布时间（仅在发布时间为空时）
 articleSchema.pre('save', function(next) {
+  // 只有当文章被发布且发布时间尚未设置时才设置发布时间
   if (this.published && !this.published_date) {
     this.published_date = new Date();
   }
+  
+  // 如果文章未发布，但之前有发布时间，保留发布时间
+  // 这样可以在编辑已发布文章时保持发布时间不变
+  
   next();
 });
 
@@ -85,6 +100,29 @@ articleSchema.statics.getPublished = function() {
 // 静态方法：按分类获取文章
 articleSchema.statics.getByCategory = function(category) {
   return this.find({ published: true, category }).sort({ published_date: -1 });
+};
+
+// 静态方法：获取单篇文章（新增）
+articleSchema.statics.getById = function(id) {
+  return this.findById(id);
+};
+
+// 静态方法：创建文章（新增）
+articleSchema.statics.createArticle = function(articleData) {
+  const article = new this(articleData);
+  return article.save();
+};
+
+// 静态方法：更新文章（新增）
+articleSchema.statics.updateArticle = function(id, updateData) {
+  return this.findByIdAndUpdate(
+    id, 
+    { 
+      ...updateData,
+      updated_date: new Date() // 确保更新时间被设置
+    }, 
+    { new: true, runValidators: true }
+  );
 };
 
 const Article = mongoose.model('Article', articleSchema);

@@ -79,6 +79,40 @@ class ApiService {
 
     // 获取统计信息
     getStats: () => this.request('/articles/stats'),
+
+    // 新增：按分类获取文章
+    getByCategory: (category) => 
+      this.request(`/articles/category/${category}`),
+
+    // 新增：获取已发布文章
+    getPublished: () => 
+      this.request('/articles/published'),
+
+    // 新增：获取博客站点的文章（用于主站集成）
+    getBlogArticles: (limit = 12) =>
+      this.request(`/blog/api/articles?limit=${limit}`)
+  };
+
+  // 新增：博客相关API（如果与主站文章API不同）
+  blog = {
+    // 获取博客文章列表
+    getArticles: (params = {}) => {
+      const queryParams = new URLSearchParams();
+      
+      Object.keys(params).forEach(key => {
+        if (params[key] !== undefined && params[key] !== null) {
+          queryParams.append(key, params[key]);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = queryString ? `/blog/api/articles?${queryString}` : '/blog/api/articles';
+      
+      return this.request(url);
+    },
+
+    // 获取单篇博客文章
+    getArticle: (id) => this.request(`/blog/api/articles/${id}`),
   };
 }
 

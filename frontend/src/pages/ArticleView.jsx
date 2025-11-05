@@ -2,11 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Article } from "@/entities/Article";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { Calendar, Clock, Tag, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, Tag, ArrowLeft, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import ReactMarkdown from "react-markdown";
-import DOMPurify from "dompurify";
 
 export default function ArticleView() {
   const navigate = useNavigate();
@@ -72,8 +71,8 @@ export default function ArticleView() {
   return (
     <div>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-8">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border-b border-gray-200">
+        <div className="max-w-4xl mx-auto px-6 py-12"> {/* 增加了 py-12 让区域更高 */}
           <Link
             to={createPageUrl("Home")}
             className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-6"
@@ -84,7 +83,7 @@ export default function ArticleView() {
 
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-4">
-              <Badge className="bg-blue-100 text-blue-700">
+              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
                 <Tag className="w-3 h-3 mr-1" />
                 {article.category}
               </Badge>
@@ -98,6 +97,12 @@ export default function ArticleView() {
                 <Calendar className="w-4 h-4 mr-1" />
                 {format(new Date(article.published_date || article.created_date), "MMMM d, yyyy")}
               </div>
+              {article.author && (
+                <div className="flex items-center text-gray-600">
+                  <User className="w-4 h-4 mr-1" />
+                  By {article.author}
+                </div>
+              )}
             </div>
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 leading-tight">
               {article.title}
@@ -110,7 +115,7 @@ export default function ArticleView() {
           {article.tags && article.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {article.tags.map((tag, index) => (
-                <Badge key={index} variant="secondary" className="bg-gray-100">
+                <Badge key={index} variant="secondary" className="bg-white bg-opacity-80">
                   {tag}
                 </Badge>
               ))}
@@ -119,27 +124,53 @@ export default function ArticleView() {
         </div>
       </div>
 
+      {/* Excerpt/前言区域 - 添加在封面图片和内容之间 */}
+      {article.excerpt && (
+        <div className="max-w-3xl mx-auto px-6 py-8">
+          <div className="border-l-4 border-blue-500 pl-6">
+            <p className="text-xl italic text-gray-700 font-serif leading-relaxed">
+              {article.excerpt}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Cover Image */}
       {article.cover_image && (
-        <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="rounded-2xl overflow-hidden shadow-2xl">
-            <img
-              src={article.cover_image}
-              alt={article.title}
-              className="w-full h-96 object-cover"
-            />
-          </div>
+        <div className="max-w-3xl mx-auto px-6 py-6">
+          <img
+            src={article.cover_image}
+            alt={article.title}
+            className="w-full h-64 object-cover rounded-lg"
+          />
         </div>
       )}
 
       {/* Content */}
       <div className="max-w-3xl mx-auto px-6 py-12">
-        <article
-          className="prose prose-lg prose-blue max-w-none"
-          dangerouslySetInnerHTML={{
-            __html: DOMPurify ? DOMPurify.sanitize(article.content) : article.content
-          }}
-        />
+        <article className="prose prose-lg prose-blue max-w-none">
+          <ReactMarkdown
+            components={{
+              // 自定义渲染组件以获得更好的控制
+              p: ({node, ...props}) => <p className="mb-4 leading-relaxed" {...props} />,
+              h1: ({node, ...props}) => <h1 className="text-3xl font-bold mt-8 mb-4" {...props} />,
+              h2: ({node, ...props}) => <h2 className="text-2xl font-bold mt-6 mb-3" {...props} />,
+              h3: ({node, ...props}) => <h3 className="text-xl font-bold mt-4 mb-2" {...props} />,
+              ul: ({node, ...props}) => <ul className="my-4 pl-6 list-disc" {...props} />,
+              ol: ({node, ...props}) => <ol className="my-4 pl-6 list-decimal" {...props} />,
+              li: ({node, ...props}) => <li className="mb-1" {...props} />,
+              blockquote: ({node, ...props}) => (
+                <blockquote className="border-l-4 border-blue-500 pl-4 italic my-4" {...props} />
+              ),
+              code: ({node, inline, ...props}) => 
+                inline ? 
+                  <code className="bg-gray-100 px-1 rounded text-sm" {...props} /> :
+                  <code className="block bg-gray-100 p-4 rounded my-4 overflow-x-auto text-gray-800" {...props} />
+            }}
+          >
+            {article.content}
+          </ReactMarkdown>
+        </article>
       </div>
     </div>
   );
